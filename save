@@ -1,0 +1,203 @@
+package com.experian.br.feature.processor.npm.observer
+
+
+
+object start extends App{
+
+  val list = List(
+    AccountReporter7,
+    AccountReporter8,
+    AccountReporter10,
+    AccountReporter5,
+    AccountReporter12
+  )
+
+  val result = flatAndSortFeatures(Seq(),list: _*)
+
+  result.foreach(_.registerInSuperFeature())
+
+
+  val ini = System.currentTimeMillis()
+
+    result
+    .filter(_.dependeciesList().isEmpty)
+    .par
+    .map(_.notifyAndCallOther())
+
+  def flatAndSortFeatures(resultList: Seq[Observer], featuresList: Observer*): Seq[Observer] = {
+    featuresList
+      .flatMap(feat => {
+        if (feat.dependeciesList().isEmpty) Seq(feat)
+        else feat :: feat.dependeciesList.flatMap(feat => flatAndSortFeatures(resultList, feat))
+      })
+      .toList
+      .distinct
+  }
+}
+
+abstract class Observer {
+  def dependeciesList(): List[Observer]
+
+  var alreadyExecuted = false
+  var startedCall = false
+  def impl(result: Any): Any
+
+  def notifyAndCallOther(superFeatureResult: Any = 0) = {
+    if (canBeCalled){
+
+      startedCall = true
+      val resultFromImpl = impl(superFeatureResult)
+      Thread.sleep(5000)
+      alreadyExecuted = true
+
+      println(s" called by  ${this.getClass.getSimpleName }  ${observers.foreach(a => print( s"${a.getClass.getSimpleName} "))}")
+
+      println()
+      notifySubFeatures(resultFromImpl)
+    }
+  }
+
+  private def canBeCalled = {
+    dependeciesList().isEmpty || (allSuperFeaturesWasExecuted && !startedCall && !this.alreadyExecuted)
+  }
+
+  private def allSuperFeaturesWasExecuted = {
+    !dependeciesList().map(_.alreadyExecuted).contains(false)
+  }
+
+  def registerInSuperFeature(): Unit ={
+    val list = dependeciesList()
+    list.foreach(superFeature => superFeature.addObserver(this))
+  }
+
+  private var observers: List[Observer] = Nil
+  def addObserver(observer: Observer*) = observers = List(observer:_*).union(observers)
+
+
+  def notifySubFeatures(result: Any): Unit = {
+    observers
+      .filter(!_.alreadyExecuted)
+      .par
+      .foreach(_.notifyAndCallOther(result))
+  }
+}
+
+object AccountReporter1 extends Observer {
+  def impl(previousResult: Any) = {
+
+    println(s"${this.getClass.getSimpleName} called by ${previousResult.toString} executed in ${(System.currentTimeMillis() - start.ini) / 1000 }")
+    this.getClass.getSimpleName
+  }
+  override def dependeciesList() = List()
+}
+
+object AccountReporter2 extends Observer {
+  def impl(previousResult: Any) = {
+
+    println(s"${this.getClass.getSimpleName} called by ${previousResult.toString} executed in ${(System.currentTimeMillis() - start.ini) / 1000 }")
+    this.getClass.getSimpleName
+  }
+  override def dependeciesList() = List(AccountReporter1)
+}
+
+object AccountReporter3 extends Observer {
+  def impl(previousResult: Any) = {
+
+    println(s"${this.getClass.getSimpleName} called by ${previousResult.toString} executed in ${(System.currentTimeMillis() - start.ini) / 1000 }")
+    this.getClass.getSimpleName
+  }
+  override def dependeciesList() = List(AccountReporter1)
+}
+
+object AccountReporter4 extends Observer {
+  def impl(previousResult: Any) = {
+
+    println(s"${this.getClass.getSimpleName} called by ${previousResult.toString} executed in ${(System.currentTimeMillis() - start.ini) / 1000 }")
+    this.getClass.getSimpleName
+  }
+
+  override def dependeciesList() = List(AccountReporter2)
+}
+
+
+object AccountReporter5 extends Observer {
+  def impl(previousResult: Any) = {
+
+    println(s"${this.getClass.getSimpleName} called by ${previousResult.toString} executed in ${(System.currentTimeMillis() - start.ini) / 1000 }")
+    this.getClass.getSimpleName
+  }
+
+  override def dependeciesList() = List(AccountReporter2, AccountReporter3)
+}
+
+
+object AccountReporter6 extends Observer {
+  def impl(previousResult: Any) = {
+
+    println(s"${this.getClass.getSimpleName} called by ${previousResult.toString} executed in ${(System.currentTimeMillis() - start.ini) / 1000 }")
+    this.getClass.getSimpleName
+  }
+
+  override def dependeciesList() = List(AccountReporter3)
+}
+
+object AccountReporter7 extends Observer {
+  def impl(previousResult: Any) = {
+
+    println(s"${this.getClass.getSimpleName} called by ${previousResult.toString} executed in ${(System.currentTimeMillis() - start.ini) / 1000 }")
+    this.getClass.getSimpleName
+  }
+
+  override def dependeciesList() = List(AccountReporter3)
+}
+
+object AccountReporter8 extends Observer {
+  def impl(previousResult: Any) = {
+
+    println(s"${this.getClass.getSimpleName} called by ${previousResult.toString} executed in ${(System.currentTimeMillis() - start.ini) / 1000 }")
+    this.getClass.getSimpleName
+  }
+
+  override def dependeciesList() = List(AccountReporter3)
+}
+
+object AccountReporter9 extends Observer {
+  def impl(previousResult: Any) = {
+
+    println(s"${this.getClass.getSimpleName} called by ${previousResult.toString} executed in ${(System.currentTimeMillis() - start.ini) / 1000 }")
+    this.getClass.getSimpleName
+  }
+
+  override def dependeciesList() = List(AccountReporter1, AccountReporter3, AccountReporter6)
+}
+
+object AccountReporter10 extends Observer {
+  def impl(previousResult: Any) = {
+
+    println(s"${this.getClass.getSimpleName} called by ${previousResult.toString} executed in ${(System.currentTimeMillis() - start.ini) / 1000 }")
+    this.getClass.getSimpleName
+  }
+
+  override def dependeciesList() = List(AccountReporter4, AccountReporter9)
+}
+
+
+object AccountReporter11 extends Observer {
+  def impl(previousResult: Any) = {
+
+    println(s"${this.getClass.getSimpleName} called by ${previousResult.toString} executed in ${(System.currentTimeMillis() - start.ini) / 1000 }")
+    this.getClass.getSimpleName
+  }
+
+  override def dependeciesList() = List(AccountReporter1, AccountReporter10)
+}
+
+object AccountReporter12 extends Observer {
+  def impl(previousResult: Any) = {
+
+    println(s"${this.getClass.getSimpleName} called by ${previousResult.toString} executed in ${(System.currentTimeMillis() - start.ini) / 1000 }")
+    this.getClass.getSimpleName
+  }
+
+  override def dependeciesList() = List(AccountReporter11)
+}
